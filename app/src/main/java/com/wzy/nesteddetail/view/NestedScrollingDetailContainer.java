@@ -9,6 +9,7 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -72,18 +73,19 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
         int width;
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int measureWidth = MeasureSpec.getSize(widthMeasureSpec);
-
-        int measureHeight = MeasureSpec.getSize(heightMeasureSpec);
         if (widthMode == MeasureSpec.EXACTLY) {
             width = measureWidth;
         } else {
             width = mScreenWidth;
         }
 
+
+        int measureHeight = MeasureSpec.getSize(heightMeasureSpec);
         int left = getPaddingLeft();
         int right = getPaddingRight();
         int top = getPaddingTop();
         int bottom = getPaddingBottom();
+
         int count = getChildCount();
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
@@ -179,7 +181,7 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
                 // 拦截落在不可滑动子View的MOVE事件
                 final int y = (int) ev.getY();
                 final int yDiff = Math.abs(y - mLastMotionY);
-                boolean isInNestedChildViewArea = isTouchNestedInnerView((int)ev.getRawX(), (int)ev.getRawY());
+                boolean isInNestedChildViewArea = isTouchNestedInnerView((int) ev.getRawX(), (int) ev.getRawY());
                 if (yDiff > TOUCH_SLOP && !isInNestedChildViewArea) {
                     mIsBeingDragged = true;
                     mLastMotionY = y;
@@ -455,6 +457,7 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
 
     @Override
     public boolean onStartNestedScroll(@NonNull View child, @NonNull View target, int axes, int type) {
+        Log.v("xhw","NestedScrollingDetailContainer onStartNestedScroll");
         return (axes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
     }
 
@@ -463,16 +466,21 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
         return getNestedScrollingHelper().getNestedScrollAxes();
     }
 
+    // 响应子View的滚动
     @Override
     public void onNestedScrollAccepted(@NonNull View child, @NonNull View target, int axes, int type) {
+        Log.v("xhw","NestedScrollingDetailContainer onNestedScrollAccepted");
         getNestedScrollingHelper().onNestedScrollAccepted(child, target, axes, type);
     }
 
+    // 滚动结束的回调
     @Override
     public void onStopNestedScroll(@NonNull View target, int type) {
+        Log.v("xhw","NestedScrollingDetailContainer onStopNestedScroll");
         getNestedScrollingHelper().onStopNestedScroll(target);
     }
 
+    // ns child滚动前回调
     @Override
     public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
         if (target instanceof NestedScrollingWebView) {
@@ -489,24 +497,30 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
 
         return false;
     }
-
+    // ns child flying后回调
     @Override
     public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
         return false;
     }
-
+    // ns child滚动后回调
     @Override
     public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+        Log.v("xhw","NestedScrollingDetailContainer onNestedScroll");
+
         if (dyUnconsumed < 0) {
             //RecyclerView向父控件的滑动衔接处
             scrollBy(0, dyUnconsumed);
         }
     }
-
+    // ns child滚动前回调
     @Override
     public void onNestedPreScroll(@NonNull View target, int dx, int dy, @Nullable int[] consumed, int type) {
+
+
+        //webview是否滚动到底部
         boolean isWebViewBottom = !canWebViewScrollDown();
         boolean isCenter = isParentCenter();
+        //dy>0 向上滑动 dy<0 向下滑动
         if (dy > 0 && isWebViewBottom && getScrollY() < getInnerScrollHeight()) {
             //为了WebView滑动到底部，继续向下滑动父控件
             scrollBy(0, dy);
@@ -524,5 +538,6 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
             //异常情况的处理
             scrollToWebViewBottom();
         }
+        Log.e("xhw","NestedScrollingDetailContainer onNestedPreScroll dx="+dx+" dy="+dy+" consumed[0]="+consumed[0]+" consumed[1]="+consumed[1]);
     }
 }

@@ -18,6 +18,13 @@ import com.wzy.nesteddetail.view.NestedScrollingWebView;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *
+ * https://mp.weixin.qq.com/s/hqlCIDVZyPaaVqVqPntSuw
+ *
+ * 10分钟带你入门NestedScrolling机制
+ * https://segmentfault.com/a/1190000019272870
+ */
 public class MainActivity extends AppCompatActivity {
     private TextView vToolBar;
     private NestedScrollingDetailContainer nestedContainer;
