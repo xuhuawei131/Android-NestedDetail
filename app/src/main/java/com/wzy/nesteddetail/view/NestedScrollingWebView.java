@@ -102,6 +102,7 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
                 if (!dispatchNestedPreScroll(0, -dy, mScrollConsumed, null)) {
+                    Log.v("xhw","NestedScrollingWebView  scrollBy dy="+dy );
                     scrollBy(0, -dy);
                 }
                 if (Math.abs(mFirstY - y) > TOUCH_SLOP) {
@@ -277,19 +278,39 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
         return getNestedScrollingHelper().hasNestedScrollingParent();
     }
 
+    /** dispatchNestedPreScroll方法中调用parent的onNestedPreScroll
+     *  4.1. ns child并不是直接自己消费，而是先将它交给ns parent，让ns parent可以在ns child滑动前进行消费。
+     *
+     *  4.2. 如果ns parent没有消费或者滑动没消费完，ns child再消费剩下的滑动。
+     *
+     *  4.3. 如果ns child消费后滑动还是有剩余，会把剩下的滑动距离再交给ns parent消费。（调用parent中的onNestedScroll方法）
+     *
+     *  4.4. 最后如果ns parent消费滑动后还有剩余，ns child可以做最终处理。
+     * @param dx
+     * @param dy
+     * @param consumed
+     * @param offsetInWindow
+     * @return
+     */
+
+    //消费滑动时间前，先让ns parent消费。调用parent的onNestedPreScroll方法
     @Override
     public boolean dispatchNestedPreScroll(int dx, int dy, @Nullable int[] consumed, @Nullable int[] offsetInWindow) {
-        Log.e("xhw","NestedScrollingWebView dispatchNestedPreScroll dx="+dx+" dy="+dy+" consumed[0]="+consumed[0]+" consumed[1]="+consumed[1]);
+        Log.v("xhw","NestedScrollingWebView dispatchNestedPreScrolldy="+dy+"  consumed[1]="+consumed[1]);
         return getNestedScrollingHelper().dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow);
     }
     @Override
     public boolean dispatchNestedPreScroll(int dx, int dy, @Nullable int[] consumed, @Nullable int[] offsetInWindow, int type) {
-        Log.e("xhw","NestedScrollingWebView dispatchNestedPreScroll dx="+dx+" dy="+dy+" consumed[0]="+consumed[0]+"consumed[1]="+consumed[1]);
+        Log.e("xhw","NestedScrollingWebView dispatchNestedPreScroll  dy="+dy+" consumed[1]="+consumed[1]);
         return getNestedScrollingHelper().dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, type);
     }
+
+
+
+    // ns parent消费ns child剩余滚动后是否还有剩余。return true代表还有剩余
     @Override
     public boolean dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, @Nullable int[] offsetInWindow) {
-        Log.v("xhw","NestedScrollingWebView dispatchNestedScroll");
+        Log.v("xhw","NestedScrollingWebView dispatchNestedScroll dyConsumed="+dyConsumed+" dyUnconsumed="+dyUnconsumed);
         return getNestedScrollingHelper().dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, offsetInWindow);
     }
     @Override

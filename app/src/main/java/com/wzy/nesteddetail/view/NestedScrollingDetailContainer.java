@@ -473,6 +473,43 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
         getNestedScrollingHelper().onNestedScrollAccepted(child, target, axes, type);
     }
 
+    // ns child滚动前回调 如果有没消耗完的 那么会调用child的 dispatchNestedScroll方法
+    @Override
+    public void onNestedPreScroll(@NonNull View target, int dx, int dy, @Nullable int[] consumed, int type) {
+        //webview是否滚动到底部
+        boolean isWebViewBottom = !canWebViewScrollDown();
+        boolean isCenter = isParentCenter();
+        //dy>0 向上滑动 dy<0 向下滑动
+        if (dy > 0 && isWebViewBottom && getScrollY() < getInnerScrollHeight()) {
+            //为了WebView滑动到底部，继续向下滑动父控件
+            scrollBy(0, dy);
+            if (consumed != null) {
+                consumed[1] = dy;
+            }
+        } else if (dy < 0 && isCenter) {
+            //为了RecyclerView滑动到顶部时，继续向上滑动父控件
+            scrollBy(0, dy);
+            if (consumed != null) {
+                consumed[1] = dy;
+            }
+        }
+        if (isCenter && !isWebViewBottom) {
+            //异常情况的处理
+            scrollToWebViewBottom();
+        }
+        Log.e("xhw","NestedScrollingDetailContainer onNestedPreScroll  dy="+dy+"  consumed[1]="+consumed[1]);
+    }
+
+    // ns child滚动后 还有没消耗 会回调parent的这个方法
+    @Override
+    public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+        Log.v("xhw","NestedScrollingDetailContainer onNestedScroll");
+        if (dyUnconsumed < 0) {
+            //RecyclerView向父控件的滑动衔接处
+            scrollBy(0, dyUnconsumed);
+        }
+    }
+
     // 滚动结束的回调
     @Override
     public void onStopNestedScroll(@NonNull View target, int type) {
@@ -502,42 +539,5 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
     public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
         return false;
     }
-    // ns child滚动后回调
-    @Override
-    public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
-        Log.v("xhw","NestedScrollingDetailContainer onNestedScroll");
 
-        if (dyUnconsumed < 0) {
-            //RecyclerView向父控件的滑动衔接处
-            scrollBy(0, dyUnconsumed);
-        }
-    }
-    // ns child滚动前回调
-    @Override
-    public void onNestedPreScroll(@NonNull View target, int dx, int dy, @Nullable int[] consumed, int type) {
-
-
-        //webview是否滚动到底部
-        boolean isWebViewBottom = !canWebViewScrollDown();
-        boolean isCenter = isParentCenter();
-        //dy>0 向上滑动 dy<0 向下滑动
-        if (dy > 0 && isWebViewBottom && getScrollY() < getInnerScrollHeight()) {
-            //为了WebView滑动到底部，继续向下滑动父控件
-            scrollBy(0, dy);
-            if (consumed != null) {
-                consumed[1] = dy;
-            }
-        } else if (dy < 0 && isCenter) {
-            //为了RecyclerView滑动到顶部时，继续向上滑动父控件
-            scrollBy(0, dy);
-            if (consumed != null) {
-                consumed[1] = dy;
-            }
-        }
-        if (isCenter && !isWebViewBottom) {
-            //异常情况的处理
-            scrollToWebViewBottom();
-        }
-        Log.e("xhw","NestedScrollingDetailContainer onNestedPreScroll dx="+dx+" dy="+dy+" consumed[0]="+consumed[0]+" consumed[1]="+consumed[1]);
-    }
 }
